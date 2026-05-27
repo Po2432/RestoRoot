@@ -4,11 +4,6 @@
  */
 
 <?php
-/**
- * RestoRoot Bootstrapper Installer
- * Automatically downloads, secures, and configures files.
- * App code owned by Po2432.
- */
 session_start();
 
 // Handle self-deletion and redirecting
