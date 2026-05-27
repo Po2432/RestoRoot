@@ -1,8 +1,3 @@
-/*
- * Copyright (c) 2026 po2432
- * Repository: https://github.com/Po2432/RestoRoot
- */
-
 <?php
 session_start();
 
@@ -54,7 +49,7 @@ if ($db === null) {
     }
 }
 
-// AUTO-MIGRATIONS (Seamless Upgrades)
+// AUTO-MIGRATIONS
 $db->query("CREATE TABLE IF NOT EXISTS feedback (id INTEGER PRIMARY KEY AUTOINCREMENT, customer_name TEXT, message TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)");
 $db->addColumnIfNotExists('menu_items', 'allergens', 'TEXT DEFAULT ""');
 $db->addColumnIfNotExists('menu_items', 'detail_text', 'TEXT DEFAULT ""');
@@ -89,17 +84,12 @@ $settings = getSettings($db);
 
 // --- STRICT EULA GATEKEEPER LOCKOUT ---
 $eulaFlag = __DIR__ . '/../eula.flag';
+$currentPage = basename($_SERVER['PHP_SELF']);
+$bypassPages = ['install.php', 'login.php', 'logout.php', 'admin.php', 'error.php'];
 
-// Process EULA acceptance post
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accept_eula_submit'])) {
-    @file_put_contents($eulaFlag, "ACCEPTED: " . date('Y-m-d H:i:s'));
-    header("Location: " . $_SERVER['REQUEST_URI']);
-    exit;
-}
-
-// Block access if EULA is not signed
-if (!file_exists($eulaFlag)) {
-    $eulaText = "EULA agreement file is missing. Please review and agree to terms.";
+// Block public access if EULA flag file is missing
+if (!file_exists($eulaFlag) && !in_array($currentPage, $bypassPages)) {
+    $eulaText = "EULA agreement file (EULA.md) is missing. Please read the license terms.";
     if (file_exists(__DIR__ . '/../EULA.md')) {
         $eulaText = file_get_contents(__DIR__ . '/../EULA.md');
     }
@@ -110,22 +100,22 @@ if (!file_exists($eulaFlag)) {
         <meta charset="UTF-8">
         <title>License Agreement Required</title>
         <style>
-            body { font-family: system-ui, sans-serif; background: #0f172a; color: #cbd5e1; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 1rem; margin: 0; }
-            .box { max-width: 600px; width: 100%; background: #1e293b; padding: 2rem; border-radius: 8px; border: 1px solid #334155; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-            h1 { color: #fff; font-size: 1.5rem; margin-top: 0; margin-bottom: 0.5rem; }
-            pre { background: #0b0f19; padding: 1rem; border-radius: 4px; border: 1px solid #334155; font-size: 0.85rem; overflow-y: auto; height: 250px; white-space: pre-wrap; color: #94a3b8; line-height: 1.5; margin-bottom: 1.5rem; }
-            button { background: #e74c3c; color: white; border: none; padding: 1rem; width: 100%; font-weight: bold; font-size: 1rem; border-radius: 4px; cursor: pointer; }
-            button:hover { opacity: 0.9; }
+            body { font-family: ui-monospace, monospace; background: #0f172a; color: #cbd5e1; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 1rem; margin: 0; }
+            .box { max-width: 650px; width: 100%; background: #1e293b; padding: 2rem; border-radius: 8px; border: 1px solid #334155; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+            h1 { color: #fff; font-size: 1.4rem; margin-top: 0; margin-bottom: 0.5rem; }
+            pre { background: #0b0f19; padding: 1rem; border-radius: 4px; border: 1px solid #334155; font-size: 0.85rem; overflow-y: auto; height: 220px; white-space: pre-wrap; color: #94a3b8; line-height: 1.5; margin-bottom: 1.5rem; }
+            .instructions { background: rgba(231, 76, 60, 0.1); border-left: 4px solid #e74c3c; padding: 1rem; border-radius: 4px; color: #f8a5c2; font-size: 0.9rem; margin-bottom: 0; line-height: 1.5; }
         </style>
     </head>
     <body>
         <div class="box">
-            <h1>License Terms & Agreement Required</h1>
-            <p style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 1.5rem;">To initialize and run this software, you must read and accept the End User License Agreement (EULA).</p>
+            <h1>License Verification Required</h1>
+            <p style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 1.5rem;">This application is currently locked because the End User License Agreement (EULA) has not been finalized.</p>
             <pre><?= htmlspecialchars($eulaText) ?></pre>
-            <form method="POST">
-                <button type="submit" name="accept_eula_submit">I Agree to the License Terms</button>
-            </form>
+            <div class="instructions">
+                <strong>🔒 Access Blocked</strong><br>
+                If you are the administrator of this site and missed the agreement phase during installation, you must manually create an empty file named <code>eula.flag</code> in your root directory via FTP or File Manager to unlock your public views.
+            </div>
         </div>
     </body>
     </html>
@@ -134,11 +124,8 @@ if (!file_exists($eulaFlag)) {
 }
 
 // MAINTENANCE BLOCKER
-$currentPage = basename($_SERVER['PHP_SELF']);
-$allowedPages = ['login.php', 'install.php', 'logout.php', 'admin.php', 'error.php'];
-
 if (($settings['maintenance_mode'] ?? '0') === '1' && !isset($_SESSION['user_id'])) {
-    if (!in_array($currentPage, $allowedPages)) {
+    if (!in_array($currentPage, $bypassPages)) {
         include __DIR__ . '/../maintenance.php';
         exit;
     }
