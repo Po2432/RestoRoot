@@ -1,8 +1,3 @@
-/*
- * Copyright (c) 2026 po2432
- * Repository: https://github.com/Po2432/RestoRoot
- */
-
 <?php
 /**
  * RestoRoot Bootstrapper Installer
@@ -92,36 +87,46 @@ function downloadUrl($url, $saveTo) {
 // Trigger installation sequence
 $installing = ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['start_install']));
 if ($installing) {
-    @mkdir('data', 0775, true);
-    @mkdir('uploads', 0775, true);
+    // Force agreement verification on backend
+    if (!isset($_POST['agree_terms'])) {
+        $downloadError = true;
+        $downloadLogs[] = "❌ Error: You must read and accept the EULA/License terms to run this installer.";
+    } else {
+        @mkdir('data', 0775, true);
+        @mkdir('uploads', 0775, true);
 
-    foreach ($files as $file) {
-        $rawUrl = "https://raw.githubusercontent.com/{$repo}/{$branch}/{$path}/{$file}";
-        $localPath = __DIR__ . '/' . $file;
+        foreach ($files as $file) {
+            $rawUrl = "https://raw.githubusercontent.com/{$repo}/{$branch}/{$path}/{$file}";
+            $localPath = __DIR__ . '/' . $file;
 
-        if (downloadUrl($rawUrl, $localPath)) {
-            $downloadLogs[] = "✓ Successfully fetched: {$file}";
-        } else {
-            $downloadLogs[] = "❌ Failed to fetch: {$file} (Tried URL: {$rawUrl})";
-            $downloadError = true;
-        }
-    }
-
-    if (!$downloadError) {
-        $serverSoftware = $_SERVER['SERVER_SOFTWARE'] ?? '';
-        $isApache = (stripos($serverSoftware, 'Apache') !== false || stripos($serverSoftware, 'LiteSpeed') !== false);
-
-        if ($isApache) {
-            $htaccessContent = "Require all denied";
-            @file_put_contents(__DIR__ . '/data/.htaccess', $htaccessContent);
-            
-            if (!file_exists(__DIR__ . '/.htaccess')) {
-                $rootHtaccess = "ErrorDocument 404 /error.php?status=404\n";
-                $rootHtaccess .= "ErrorDocument 403 /error.php?status=403\n";
-                $rootHtaccess .= "ErrorDocument 500 /error.php?status=500\n";
-                @file_put_contents(__DIR__ . '/.htaccess', $rootHtaccess);
+            if (downloadUrl($rawUrl, $localPath)) {
+                $downloadLogs[] = "✓ Successfully fetched: {$file}";
+            } else {
+                $downloadLogs[] = "❌ Failed to fetch: {$file} (Tried URL: {$rawUrl})";
+                $downloadError = true;
             }
-            $downloadLogs[] = "✓ Configured local Apache rewrite protections (.htaccess)";
+        }
+
+        if (!$downloadError) {
+            // Write EULA agreement flag upon successful configuration
+            @file_put_contents(__DIR__ . '/eula.flag', "ACCEPTED DURING BOOTSTRAP: " . date('Y-m-d H:i:s'));
+            $downloadLogs[] = "✓ Generated license verification flag (eula.flag)";
+
+            $serverSoftware = $_SERVER['SERVER_SOFTWARE'] ?? '';
+            $isApache = (stripos($serverSoftware, 'Apache') !== false || stripos($serverSoftware, 'LiteSpeed') !== false);
+
+            if ($isApache) {
+                $htaccessContent = "Require all denied";
+                @file_put_contents(__DIR__ . '/data/.htaccess', $htaccessContent);
+                
+                if (!file_exists(__DIR__ . '/.htaccess')) {
+                    $rootHtaccess = "ErrorDocument 404 /error.php?status=404\n";
+                    $rootHtaccess .= "ErrorDocument 403 /error.php?status=403\n";
+                    $rootHtaccess .= "ErrorDocument 500 /error.php?status=500\n";
+                    @file_put_contents(__DIR__ . '/.htaccess', $rootHtaccess);
+                }
+                $downloadLogs[] = "✓ Configured local Apache rewrite protections (.htaccess)";
+            }
         }
     }
 }
@@ -158,6 +163,8 @@ if ($installing) {
         .btn-launch { background: var(--success); display: inline-block; text-decoration: none; color: white; padding: 0.8rem 1.5rem; border-radius: 4px; font-weight: bold; text-align: center; }
         .log-box { background: #0f172a; border: 1px solid var(--border); padding: 1rem; border-radius: 4px; font-size: 0.85rem; max-height: 250px; overflow-y: auto; margin-bottom: 1.5rem; }
         .log-entry { margin-bottom: 0.3rem; }
+        .checkbox-row { display: flex; align-items: flex-start; gap: 0.5rem; background: #0f172a; border: 1px solid var(--border); padding: 1rem; border-radius: 4px; margin: 1.5rem 0; }
+        .checkbox-row input { margin-top: 0.2rem; }
     </style>
 </head>
 <body>
@@ -189,7 +196,7 @@ if ($installing) {
             <form method="POST">
                 <?php if ($downloadError): ?>
                     <div style="background: rgba(231, 76, 60, 0.1); border: 1px solid var(--primary); padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem;">
-                        <span style="color:var(--primary); font-weight:bold;">⚠️ Warning:</span> One or more files failed to download. Please verify your repository path and branch name.
+                        <span style="color:var(--primary); font-weight:bold;">⚠️ Warning:</span> Deployment parameters failed. Ensure paths and internet connectivity are correct.
                     </div>
                 <?php endif; ?>
 
@@ -205,8 +212,16 @@ if ($installing) {
                     <label>Subdirectory Path (within repository):</label>
                     <input type="text" name="path" value="<?= htmlspecialchars($path) ?>">
                 </div>
+
+                <!-- Required EULA/License Checkbox Verification -->
+                <div class="checkbox-row">
+                    <input type="checkbox" name="agree_terms" id="agree_terms" value="1" required>
+                    <label for="agree_terms" style="font-weight: normal; color: #cbd5e1; cursor: pointer;">
+                        I agree to the <strong>RestoRoot End User License Agreement (EULA.md)</strong> and <strong>LICENSE.md</strong> terms. I understand commercial redistribution or code resale is strictly prohibited.
+                    </label>
+                </div>
                 
-                <button type="submit" name="start_install" style="width:100%; margin-top:1rem;">Pull Files & Secure System</button>
+                <button type="submit" name="start_install" style="width:100%;">Pull Files & Secure System</button>
             </form>
         <?php else: ?>
             <h3>Deployment Output:</h3>
