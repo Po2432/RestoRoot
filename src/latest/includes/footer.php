@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 po2432
+ * Repository: https://github.com/Po2432/RestoRoot
+ */
+
 <footer class="site-footer">
         <div class="footer-actions">
             <a href="feedback.php" class="btn-feedback">📝 Leave Feedback</a>
