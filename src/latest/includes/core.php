@@ -128,7 +128,7 @@ if (!file_exists($eulaFlag) && !in_array($currentPage, $bypassPages)) {
             <pre><?= htmlspecialchars($eulaText) ?></pre>
             <div class="instructions">
                 <strong>🔒 Access Blocked</strong><br>
-                If you are the administrator of this site and missed the agreement phase during installation, you must manually create an empty file named <code>eula.flag</code> in your root directory via FTP or File Manager to unlock your public views.\n (c) 2026 Po2432
+                If you are the administrator of this site and missed the agreement phase during installation, you must manually create an empty file named <code>eula.flag</code> in your root directory via FTP or File Manager to unlock your public views. (c) 2026 Po2432
             </div>
         </div>
     </body>
