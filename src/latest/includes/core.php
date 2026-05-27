@@ -1,14 +1,4 @@
 <?php
-
-/*
- * Copyright (c) 2026 po2432
- * Repository: https://github.com/Po2432/RestoRoot
- */
-
-/*
- * Copyright (c) 2026 po2432
- * Repository: https://github.com/Po2432/RestoRoot
- */
 session_start();
 
 class DB {
@@ -59,7 +49,7 @@ if ($db === null) {
     }
 }
 
-// AUTO-MIGRATIONS
+// AUTO-MIGRATIONS (Seamless Upgrades)
 $db->query("CREATE TABLE IF NOT EXISTS feedback (id INTEGER PRIMARY KEY AUTOINCREMENT, customer_name TEXT, message TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)");
 $db->addColumnIfNotExists('menu_items', 'allergens', 'TEXT DEFAULT ""');
 $db->addColumnIfNotExists('menu_items', 'detail_text', 'TEXT DEFAULT ""');
@@ -99,6 +89,10 @@ $bypassPages = ['install.php', 'login.php', 'logout.php', 'admin.php', 'error.ph
 
 // Block public access if EULA flag file is missing
 if (!file_exists($eulaFlag) && !in_array($currentPage, $bypassPages)) {
+    // RELEASE THE SESSION WRITE LOCK IMMEDIATELY
+    // This prevents cascading connection timeouts if the page is refreshed or accessed multiple times.
+    session_write_close(); 
+
     $eulaText = "EULA agreement file (EULA.md) is missing. Please read the license terms.";
     if (file_exists(__DIR__ . '/../EULA.md')) {
         $eulaText = file_get_contents(__DIR__ . '/../EULA.md');
