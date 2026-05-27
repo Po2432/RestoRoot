@@ -43,6 +43,8 @@ RestoRoot utilizes a clean **two-step setup** to ensure complete file integrity 
 
 ## 💾 Method A: Production Web Hosting Installation
 
+> [!WARNING]
+> Some hosts may block you from accessing your site untill an index.html or index.php file is created. If you get errors from your browser when you try to access the installer file, create an index.html file with no content or just `hi`. You will delete that file after installation is completed to make sure all users land up at correct index.php page.
 ### Step 1: Bootstrap the Files
 1. Download the standalone `installer.php` file from this repository.
 2. Upload `installer.php` to your web server's root directory (e.g., `public_html/`) via FTP or cPanel File Manager.
