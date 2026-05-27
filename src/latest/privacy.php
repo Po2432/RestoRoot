@@ -1,9 +1,9 @@
+<?php
+
 /*
  * Copyright (c) 2026 po2432
  * Repository: https://github.com/Po2432/RestoRoot
  */
-
-<?php
 require 'includes/core.php';
 $settings = getSettings($db);
 $restName = $settings['restaurant_name'] ?? 'This Restaurant';

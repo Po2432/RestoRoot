@@ -1,9 +1,9 @@
+<?php
+
 /*
  * Copyright (c) 2026 po2432
  * Repository: https://github.com/Po2432/RestoRoot
  */
-
-<?php
 $settings = getSettings($db);
 $logoPath = 'uploads/' . ($settings['logo'] ?? '');
 $hasLogo = !empty($settings['logo']) && file_exists(__DIR__ . '/../' . $logoPath);

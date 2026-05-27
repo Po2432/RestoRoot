@@ -1,9 +1,9 @@
+<?php
+
 /*
  * Copyright (c) 2026 po2432
  * Repository: https://github.com/Po2432/RestoRoot
  */
-
-<?php
 $status = filter_input(INPUT_GET, 'status', FILTER_VALIDATE_INT) ?: 404;
 
 $errorTitles = [
